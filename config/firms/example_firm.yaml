@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------
+# EXAMPLE firm profile. These numbers are placeholders, not any real
+# firm's rules. Copy this file per firm (e.g. firms/ftmo_2step.yaml),
+# fill it from the firm's official rules page / your account dashboard,
+# and point settings.yaml -> firm_file at it.
+# ---------------------------------------------------------------
+name: Example Firm 2-Step
+account_currency: USD
+
+# When the firm's "day" resets, in the firm's own timezone.
+daily_reset_time: "00:00"
+daily_reset_timezone: "Europe/Prague"   # many firms use CE(S)T; check yours
+
+# The bot acts at this fraction of every limit (0.8 = stops at 80% of the
+# allowed drawdown) so slippage / gaps cannot push it into a real breach.
+safety_buffer: 0.80
+
+phases:
+  evaluation:
+    profit_target_pct: 8.0
+    min_trading_days: 4
+    max_calendar_days: null          # null = unlimited time
+
+    daily_drawdown_pct: 5.0
+    daily_drawdown_basis: max_balance_equity   # balance | equity | max_balance_equity (value at reset)
+    daily_drawdown_of: initial       # initial = % of starting balance | day_start = % of the day's reference
+
+    max_drawdown_pct: 10.0
+    max_drawdown_type: static        # static | trailing | eod_trailing
+    trailing_basis: equity           # equity | balance (what the high-water mark follows)
+    trailing_locks_at_initial: true  # trailing floor stops rising once it reaches the start balance
+
+    max_floating_loss_pct: null      # e.g. 2.0 = open trades may never be down more than 2% (hidden-breach rule)
+    max_risk_per_trade_pct: null     # some firms cap risk per idea
+
+    consistency_pct: null            # e.g. 30 = no single day may exceed 30% of total profit
+    max_lots_total: null
+    weekend_holding: false
+    overnight_holding: true
+    ea_allowed: true                 # CHECK THIS for your firm before running the bot
+
+    news:
+      enabled: false                 # many firms restrict news only in the funded phase
+      impact_levels: [3]             # 3 = high, 2 = medium, 1 = low
+      minutes_before: 2
+      minutes_after: 2
+      no_open_in_window: true
+      no_close_in_window: true       # includes SL/TP being hit inside the window
+      flatten_before_window: false   # some firms require being flat before the event
+      allow_hold_through: true
+      violation_effect: void_profit  # void_profit | breach
+
+  funded:
+    profit_target_pct: null
+    min_trading_days: 0
+    max_calendar_days: null
+
+    daily_drawdown_pct: 5.0
+    daily_drawdown_basis: max_balance_equity
+    daily_drawdown_of: initial
+    max_drawdown_pct: 10.0
+    max_drawdown_type: static
+    trailing_basis: equity
+    trailing_locks_at_initial: true
+    max_floating_loss_pct: null
+    max_risk_per_trade_pct: null
+    consistency_pct: null
+    max_lots_total: null
+    weekend_holding: false
+    overnight_holding: true
+    ea_allowed: true
+
+    news:
+      enabled: true
+      impact_levels: [3]
+      minutes_before: 2
+      minutes_after: 2
+      no_open_in_window: true
+      no_close_in_window: true
+      flatten_before_window: true
+      allow_hold_through: false
+      violation_effect: void_profit
+
+    monthly_target_pct: [3.0, 10.0]  # your goal band; the bot stops adding risk above the top value
