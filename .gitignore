@@ -10,3 +10,5 @@ reports/*.md
 !models/.gitkeep
 !data/.gitkeep
 .DS_Store
+data/external/
+data/SOURCES.txt

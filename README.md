@@ -152,6 +152,33 @@ and run `train.py --settings <copy>`.
 
 The second test is how you know the pipeline is not leaking future data.
 
+## GFT Instant HERO $5K ($17) - multi-agent model
+
+A separate pipeline for Goat Funded Trader's Instant HERO account (the $17 /
+$5K instant account). HERO has no evaluation: "passing" means reaching the first
+payout (after 14+ days, 6 profitable days of >= 0.5%, no day above 15% of the
+profit) without breaking the 3% daily, 5% trailing or 1% floating-loss rule.
+Rules, sources and open questions: `config/firms/gft_instant_hero.yaml`.
+
+```
+python scripts/build_hero_data.py    # XAUUSD M15 2016 -> today + economic calendar, from public GitHub mirrors
+python scripts/hero_run.py           # walk-forward training, policy search, 2-year test -> reports/hero_report.md
+```
+
+| Agent | File | Job |
+|---|---|---|
+| Research | `propbot/agents/research.py` | turns the researched firm rules into hard limits |
+| Strategy (ML experts) | `propbot/agents/strategy.py`, `model.py` | trend, ICT, order-flow, reversal, news and geo experts + combiner |
+| Trend | `scripts/hero_run.py` | H4 and daily trend direction, majority vote with the combiner |
+| News | `propbot/agents/news.py` | no entries around high-impact USD events |
+| Geopolitical | `propbot/agents/geopolitical.py` | market-implied stress regime (gaps, volatility shocks, safe-haven runs) |
+| Risk | `propbot/agents/risk.py` | sizing inside every limit, profitable-day / consistency / payout plan |
+| Coordinator | `propbot/agents/coordinator.py` | runs them together bar by bar and simulates the account and its payouts |
+
+Settings: `config/settings_hero.yaml` (all bar times UTC). The report states
+plainly how much of the result comes from the risk plan and how much from
+direction calls, by comparing against random-direction trading under the same plan.
+
 ## Honest limitations
 
 - **Order flow:** spot-forex MT5 gives tick volume only. The order-flow expert uses

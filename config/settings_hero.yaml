@@ -1,0 +1,97 @@
+# ---------------------------------------------------------------
+# PropBot settings for the GFT Instant HERO $5K account (multi-agent model)
+# Data: python scripts/build_hero_data.py   Train + test: python scripts/hero_run.py
+# ---------------------------------------------------------------
+firm_file: config/firms/gft_instant_hero.yaml
+phase: funded                # HERO is an instant account
+initial_balance: 5000
+
+symbols:
+  XAUUSD: {contract_size: 100, point: 0.01, lot_step: 0.01, min_lot: 0.01, max_lot: 5, pnl_conversion: quote_usd, currencies: [USD, XAU], commission_per_lot: 6.0}
+
+timeframe: M15
+higher_timeframes: [H1, H4]
+server_utc_offset_hours: 0   # build_hero_data.py writes UTC bar times
+
+# ---------------------------------------------------------------
+# Time split (never shuffled)
+#   train  : 2016-09 -> 2022-10   fit the experts for the validation run
+#   valid  : 2022-11 -> 2024-10   choose strategy / risk parameters (agents' policy)
+#   test   : 2024-11 -> today     the last 2 years, never used for any choice
+# The final model is refitted on everything up to valid_end before the test.
+# ---------------------------------------------------------------
+history_start: "2016-09-01"
+train_end:     "2022-10-31"
+valid_start:   "2022-11-01"
+valid_end:     "2024-10-31"
+test_start:    "2024-11-01"
+test_end:      null
+
+data_dir: data
+model_dir: models
+report_dir: reports
+
+labels:
+  atr_period: 14
+  sl_atr: 1.5
+  tp_atr: 1.8
+  horizon_bars: 24           # 6 hours on M15
+
+training:
+  experts: [trend, ict, orderflow, reversal, news, geo]
+  cv_splits: 5
+  embargo_bars: 48
+  expert_params:
+    max_depth: 3
+    learning_rate: 0.05
+    max_iter: 200
+    min_samples_leaf: 400
+    l2_regularization: 3.0
+  meta_C: 0.5
+  overfit_gap_warn: 0.04
+  threshold_grid: [0.30, 0.80, 0.01]
+  min_trades_per_month: 6
+  min_expectancy_r: 0.03
+
+trading:                     # used by the generic backtester only
+  risk_per_trade_pct: 0.5
+  max_open_trades: 1
+  max_trades_per_day: 3
+  one_position_per_symbol: true
+
+session_guard:
+  max_consecutive_losses: 2
+  daily_soft_loss_pct: 1.0
+  threshold_raise: 0.03
+  reset_after_win: true
+
+# ---------------------------------------------------------------
+# Agents
+# ---------------------------------------------------------------
+agents:
+  news:
+    blackout_before_min: 30   # no new trade this close before a high-impact USD event
+    blackout_after_min: 15
+    currencies: [USD]
+  geopolitical:
+    crisis_score: 2.5         # composite stress z-score that counts as "crisis"
+    crisis_risk_mult: 0.5     # size multiplier in a crisis regime
+    block_counter_trend_in_crisis: true
+  risk:                       # defaults; scripts/hero_run.py optimises these on the validation years
+    risk_pct: 0.5             # % of balance at stop (always < floating-loss limit)
+    min_lot_up_to_room: true  # if 0.01 lot at the minimum stop costs more than risk_pct, still allow it
+                              # as long as it fits inside the buffered floating / drawdown room
+    max_trades_per_day: 3
+    day_target_pct: 0.55      # stop for the day once the day is "profitable" (>= 0.5% + costs)
+    day_stop_pct: 1.0         # stop for the day at -1% (daily limit is 3%)
+    cycle_target_pct: 4.0     # stop adding risk once the payout cap is reached
+    session_hours_utc: [6, 20]
+    flatten_before_reset_min: 30
+    threshold: null           # null = use the model's validated threshold
+
+live:
+  dry_run: true
+  magic_number: 260517
+  poll_seconds: 5
+  calendar_file: data/calendar.csv
+  log_file: reports/live_log_hero.csv
