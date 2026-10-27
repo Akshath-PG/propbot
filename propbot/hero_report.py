@@ -128,7 +128,7 @@ def write_report(rdir: Path, meta: dict, results: dict, roll: pd.DataFrame, cont
     if len(acc):
         L += ["| # | Start | End | Result | Payouts | Paid to trader | Trades |", "|---|---|---|---|---|---|---|"]
         for j, a in acc.iterrows():
-            L.append(f"| {j + 1} | {str(a['start'])[:10]} | {str(a['end'])[:10]} | {a['breach'] or 'running'} | "
+            L.append(f"| {j + 1} | {str(a['start'])[:10]} | {str(a['end'])[:10]} | {a['breach'] if isinstance(a['breach'], str) else 'running'} | "
                      f"{a['payouts']} | ${a['paid']:,.0f} | {a['trades']} |")
     if len(pay):
         L += ["", "| Payout date | Withdrawn | You get | Cycle days | Profitable days | Biggest day |",
