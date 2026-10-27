@@ -30,7 +30,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from .data import TF_MINUTES
-from .features import EXPERTS, feature_groups
+from .features import experts_for, feature_groups
 
 CLASSES = np.array([0, 1, 2])  # short win, none, long win
 
@@ -158,6 +158,7 @@ def train_ensemble(ds: pd.DataFrame, settings: dict, verbose: bool = True) -> En
         print(f"Training rows: {len(train):,}  ({train['time'].min()} -> {train['time'].max()})")
         print(f"Class mix short/none/long: {np.round(prior, 3)}   baseline log-loss {base_ll:.4f}")
 
+    EXPERTS = experts_for(settings)
     oof = pd.DataFrame(index=train.index, dtype=float)
     fold_id = pd.Series(0, index=train.index)
     diag = {g: [] for g in EXPERTS}
