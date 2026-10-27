@@ -11,6 +11,7 @@ Groups
   orderflow : tick-volume based proxies (see README: true order flow needs futures data)
   reversal  : RSI, divergence, stretch, wicks, exhaustion
   news      : time to/from high-impact events, signed surprise
+  geo       : market-implied geopolitical / macro stress (agents/geopolitical.py)
   context   : volatility regime, session, symbol (used by the combiner)
 """
 from __future__ import annotations
@@ -286,8 +287,12 @@ def context_features(df, a, f, utc_hour, symbol_id):
 
 
 GROUP_PREFIX = {"trend": "tr_", "ict": "ict_", "orderflow": "of_",
-                "reversal": "rv_", "news": "nw_", "context": "ctx_"}
+                "reversal": "rv_", "news": "nw_", "geo": "gp_", "context": "ctx_"}
 EXPERTS = ["trend", "ict", "orderflow", "reversal", "news"]
+
+
+def experts_for(settings: dict) -> list[str]:
+    return list(settings.get("training", {}).get("experts") or EXPERTS)
 
 
 def feature_groups(columns) -> dict:
@@ -311,6 +316,9 @@ def build_features(df: pd.DataFrame, settings: dict, symbol: str,
     orderflow_features(df, a, f, spec["point"])
     reversal_features(df, a, f)
     news_features(df, f, calendar, spec.get("currencies", []), symbol, tf)
+    if "geo" in experts_for(settings):
+        from .agents.geopolitical import geo_features
+        geo_features(df, a, f, settings.get("server_utc_offset_hours", 0))
     context_features(df, a, f, utc_hour, list(settings["symbols"]).index(symbol))
 
     out = pd.DataFrame({k: np.asarray(v, dtype=float) for k, v in f.items()})

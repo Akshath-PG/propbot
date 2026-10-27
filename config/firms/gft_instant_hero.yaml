@@ -1,0 +1,80 @@
+# ---------------------------------------------------------------
+# Goat Funded Trader - Instant HERO, $5,000 account ($17)
+#
+# Researched 2026-10-27 from the GFT help center ("Instant HERO Model",
+# updated 2026-10-23) and launch coverage (propfirmmatch, forexpropreviews,
+# cryptoslate). The help-center pages could not be opened directly from the
+# research environment, only their search excerpts, so RE-CHECK every value
+# against your dashboard before trading. Sources and open questions are
+# listed at the bottom.
+#
+# HERO is an *instant* account: there is no evaluation and no profit target.
+# "Passing" means reaching the first payout without breaking a rule.
+# ---------------------------------------------------------------
+name: GFT Instant HERO 5K
+account_currency: USD
+price_usd: 17                      # GFT comparison table; one review quotes $38
+
+daily_reset_time: "17:00"          # 5 PM New York time
+daily_reset_timezone: "America/New_York"
+safety_buffer: 0.80                # the bot acts at 80% of every limit
+
+phases:
+  funded:
+    profit_target_pct: null        # instant account: no target
+    min_trading_days: 0
+    max_calendar_days: null        # unlimited duration
+
+    daily_drawdown_pct: 3.0        # resets daily at 5 PM NY
+    daily_drawdown_basis: max_balance_equity   # "Balance/Equity - highest at end of day"
+    daily_drawdown_of: initial
+
+    max_drawdown_pct: 5.0          # "Max overall loss 5% (trailing)"
+    max_drawdown_type: trailing
+    trailing_basis: equity         # includes floating P&L, swaps and commissions
+    trailing_locks_at_initial: false   # not confirmed by GFT -> modelled the strict way
+
+    max_floating_loss_pct: 1.0     # open trades may never be down 1% of balance: account closed
+    floating_loss_of: balance
+    max_risk_per_trade_pct: null
+    consistency_pct: 15.0          # no single day > 15% of total profit at payout
+    max_lots_total: null
+    weekend_holding: true          # allowed per launch coverage; the bot flattens anyway
+    overnight_holding: true
+    ea_allowed: true               # own-code EAs only; 3rd-party EAs / HFT / gold-arbitrage EAs are banned
+
+    news:
+      enabled: false               # news trading allowed on HERO per launch coverage
+      impact_levels: [3]
+      minutes_before: 2
+      minutes_after: 2
+      no_open_in_window: false
+      no_close_in_window: false
+      flatten_before_window: false
+      allow_hold_through: true
+      violation_effect: void_profit
+
+    # ---- payout ("passing") rules
+    payout:
+      reward_cycle_days: 14        # first payout 14 days after start, then every 14 days
+      min_profitable_days: 6       # days closing at least +0.5% of the initial balance
+      profitable_day_pct: 0.5
+      cap_pct_of_initial: 4.0      # $5K HERO bought from 2026-10-06: payout capped at 4% per cycle
+      profit_split: 0.90           # 100% with a paid add-on
+      min_payout_usd: 0            # not published for HERO
+    min_hold_seconds: 120          # profits of trades held < 2 min are not counted
+    prohibited: [martingale, grid, hedging, copy_trading, hft, latency_arbitrage, gold_arbitrage_ea]
+
+# ---------------------------------------------------------------
+# Sources
+#   https://help.goatfundedtrader.com/en/articles/16097387-instant-hero-model
+#   https://help.goatfundedtrader.com/instant-hero.html
+#   https://propfirmmatch.com/industry-news/goat-funded-trader-retires-instant-pro-and-launches-instant-hero
+#   https://forexpropreviews.com/goat-funded-trader-launches-instant-hero-accounts/
+#   https://help.goatfundedtrader.com/en/articles/10742118-what-are-prohibited-trading-practices
+# Open questions
+#   - "Instant Haiku" is not a GFT product name; the $17 / $5K price matches Instant HERO.
+#   - Does the 5% trailing floor stop at the starting balance? (modelled: no)
+#   - Is the 1% floating limit measured on balance or on the initial balance? (modelled: balance)
+#   - Minimum payout amount and the exact 4% cap wording for 5K accounts.
+# ---------------------------------------------------------------
